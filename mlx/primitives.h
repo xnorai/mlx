@@ -357,6 +357,7 @@ class ArgPartition : public UnaryPrimitive {
   void eval_gpu(const std::vector<array>& inputs, array& out) override;
 
   DEFINE_VMAP()
+  DEFINE_GRADS()
   DEFINE_PRINT(ArgPartition)
   DEFINE_INPUT_OUTPUT_SHAPE()
   bool is_equivalent(const Primitive& other) const override;
@@ -382,6 +383,7 @@ class ArgReduce : public UnaryPrimitive {
   void eval_gpu(const std::vector<array>& inputs, array& out) override;
 
   DEFINE_VMAP()
+  DEFINE_GRADS()
   DEFINE_PRINT(ArgReduce)
   bool is_equivalent(const Primitive& other) const override;
   std::vector<std::vector<int>> output_shapes(
@@ -1146,9 +1148,13 @@ class Load : public UnaryPrimitive {
       size_t offset,
       bool swap_endianness = false)
       : UnaryPrimitive(stream),
-        reader_(reader),
+        reader_(std::move(reader)),
         offset_(offset),
-        swap_endianness_(swap_endianness) {}
+        swap_endianness_(swap_endianness) {
+    if (stream.device == Device::gpu) {
+      io_stream();
+    }
+  }
 
   void eval_cpu(const std::vector<array>& inputs, array& out) override;
   void eval_gpu(const std::vector<array>& inputs, array& out) override;
@@ -1156,6 +1162,10 @@ class Load : public UnaryPrimitive {
   DEFINE_PRINT(Load)
 
  private:
+  Stream& io_stream() {
+    static Stream io_stream = new_stream(Device::cpu);
+    return io_stream;
+  };
   void eval(const std::vector<array>& inputs, array& out);
   std::shared_ptr<io::Reader> reader_;
   size_t offset_;
