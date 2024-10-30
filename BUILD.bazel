@@ -1,0 +1,113 @@
+load("//build_rules:metal.bzl", "metal_library")
+load("//build_rules:kernel_preamble.bzl", "make_kernel_rules")
+
+package(default_visibility = ["//visibility:public"])
+
+# Generate preamble for common backend.
+genrule(
+    name = "generate_compiled_preamble_common",
+    srcs = glob(["mlx/backend/common/**/*"]),
+    outs = ["mlx/backend/common/compiled_preamble.cpp"],
+    cmd = "bash $(location mlx/backend/common/make_compiled_preamble.sh) $@ clang . TRUE",
+    tags = ["manual"],
+    tools = ["mlx/backend/common/make_compiled_preamble.sh"],
+)
+
+# Generate preamble for Metal backend.
+make_kernel_rules({
+    "utils": {
+        "src": "mlx/backend/metal/kernels/utils.h",
+        "deps": [
+            "mlx/backend/metal/kernels/bf16.h",
+            "mlx/backend/metal/kernels/complex.h",
+            "mlx/backend/metal/kernels/defines.h",
+        ],
+    },
+    "unary_ops": {
+        "src": "mlx/backend/metal/kernels/unary_ops.h",
+        "deps": [
+            "mlx/backend/metal/kernels/erf.h",
+            "mlx/backend/metal/kernels/expm1f.h",
+        ],
+    },
+    "binary_ops": {
+        "src": "mlx/backend/metal/kernels/binary_ops.h",
+    },
+    "ternary_ops": {
+        "src": "mlx/backend/metal/kernels/ternary_ops.h",
+    },
+    "reduce_utils": {
+        "src": "mlx/backend/metal/kernels/reduce_utils.h",
+        "deps": [
+            "mlx/backend/metal/kernels/atomic.h",
+            "mlx/backend/metal/kernels/reduction/ops.h",
+        ],
+    },
+    "scatter": {
+        "src": "mlx/backend/metal/kernels/scatter.h",
+    },
+    "gather": {
+        "src": "mlx/backend/metal/kernels/gather.h",
+    },
+    "hadamard": {
+        "src": "mlx/backend/metal/kernels/hadamard.h",
+    },
+})
+
+cc_library(
+    name = "mlx",
+    srcs = glob(
+        ["mlx/**/*.cpp"],
+        exclude = [
+            "mlx/backend/metal/kernels/**/*",
+            "mlx/backend/no_cpu/**/*",
+            "mlx/backend/no_metal/**/*",
+            "mlx/distributed/mpi/**/*",
+        ],
+    ),
+    hdrs = glob(
+        ["mlx/**/*.h"],
+        exclude = [
+            # "mlx/backend/metal/kernels/**/*",
+            "mlx/backend/no_cpu/**/*",
+            "mlx/backend/no_metal/**/*",
+            "mlx/distributed/mpi/**/*",
+        ],
+    ),
+    defines = [
+        "ACCELERATE_NEW_LAPACK",
+        "STRINGIFY_(x)=#x",
+        "STRINGIFY(x)=STRINGIFY_(x)",
+        "METAL_PATH=STRINGIFY(mlx.metallib)",
+    ],
+    linkopts = [
+        "-framework",
+        "Metal",
+        "-framework",
+        "Foundation",
+    ],
+    deps = [
+        "@fmt",
+        "@gguf_tools",
+        "@metal_cpp",
+        "@nlohmann_json//:singleheader-json",
+        # ":generate_compiled_preamble_common",
+        # ":generate_compiled_preamble_metal",
+    ],
+)
+
+cc_test(
+    name = "tests",
+    srcs = glob(["tests/*.cpp"]),
+    deps = [
+        ":mlx",
+        "@doctest//doctest",
+        "@doctest//doctest:main",
+    ],
+)
+
+metal_library(
+    name = "kernels",
+    srcs = glob(["mlx/backend/metal/kernels/**/*.metal"]),
+    hdrs = glob(["mlx/backend/metal/kernels/**/*.h"]),
+)

@@ -1,0 +1,50 @@
+common --enable_bzlmod
+
+build --enable_platform_specific_config=true
+build --cxxopt="-std=c++20" --host_cxxopt="-std=c++20"
+build --cxxopt="-Wno-sign-compare" --host_cxxopt="-Wno-sign-compare"
+build --cxxopt="-fno-strict-aliasing" --host_cxxopt="-fno-strict-aliasing"
+build --cxxopt="-Werror=return-type" --host_cxxopt="-Werror=return-type"
+build --cxxopt="-Werror=unused-result" --host_cxxopt="-Werror=unused-result"
+
+build:release --compilation_mode=opt
+build:release --copt=-O3
+build:release --define=apple.configuration=release
+
+# To build for iOS Simulator use `--config=ios_sim_arm64`
+# To build for iOS device use `--config=ios_arm64`
+build:ios_arm64  --apple_platform_type=ios --copt=-fembed-bitcode --copt=-Wno-c++11-narrowing --cpu=ios_arm64
+build:ios_sim_arm64  --apple_platform_type=ios --copt=-fembed-bitcode --copt=-Wno-c++11-narrowing --cpu=ios_sim_arm64
+
+build:asan --copt="-fsanitize=address" --linkopt="-fsanitize=address" \
+           --platform_suffix="-asan"
+test:asan --test_env="ASAN_OPTIONS=protect_shadow_gap=0"
+test:asan --test_env="ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer"
+test:asan --test_tag_filters=-noasan
+build:tsan --copt="-fsanitize=thread" --linkopt="-fsanitize=thread" \
+           --platform_suffix="-tsan"
+build:lsan --copt="-fsanitize=leak" --linkopt="-fsanitize=leak"
+build:ubsan --copt="-fsanitize=undefined" --linkopt="-fsanitize=undefined"
+
+# Linux/CUDA - for simplicity Linux will require CUDA to be installed even if
+# there's no GPU on the system. That way GPU binaries can still be built and we
+# don't have to provide a flag every time we compile anything for CUDA.
+
+build --flag_alias=enable_cuda=@rules_cuda//cuda:enable
+build --flag_alias=cuda_archs=@rules_cuda//cuda:archs
+build --flag_alias=cuda_compiler=@rules_cuda//cuda:compiler
+build --flag_alias=cuda_copts=@rules_cuda//cuda:copts
+build --flag_alias=cuda_runtime=@rules_cuda//cuda:runtime
+
+build:linux --enable_cuda=True
+build:linux --cuda_archs=sm_70,sm_75,sm_80,sm_86,sm_89
+# In this repo we build for PyTorch, against PyTorch runtime libs and headers
+# installed as Python packages.  If this doesn't work (e.g. in the unlikely
+# event your work doesn't use PyTorch at all), try the option below, which will
+# pull in system headers. It works with PyTorch as well, but it could lead to
+# issues.
+build:linux --cuda_runtime=@local_cuda//:no_cuda_runtime
+# build:linux --cuda_runtime=@local_cuda//:cuda_runtime
+build:linux --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0
+build:linux --cuda_copts=-D_GLIBCXX_USE_CXX11_ABI=0
+
