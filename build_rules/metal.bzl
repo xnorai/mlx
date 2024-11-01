@@ -26,7 +26,7 @@ def _metal_library_impl(ctx):
             workspace_root = "."
 
         # Note that we allow includes wrt workspace root, as specified in Style.
-        args.add_all(["metal", "-fno-fast-math", "-c", src.path, "-o", air_file.path, "-I", workspace_root])
+        args.add_all(["metal", "-Wall", "-Wextra", "-fno-fast-math", "-c", src.path, "-o", air_file.path, "-I", workspace_root])
 
         # Compile .metal files to .air
         apple_support.run(
