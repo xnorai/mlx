@@ -6,7 +6,10 @@ package(default_visibility = ["//visibility:public"])
 # Generate preamble for common backend.
 genrule(
     name = "generate_preamble_common",
-    srcs = glob(["mlx/types/*"]) + glob(["mlx/backend/common/**/*"]),
+    srcs = glob([
+        "mlx/types/*",
+        "mlx/backend/common/**/*",
+    ]),
     outs = ["mlx/backend/common/compiled_preamble.cpp"],
     cmd = "bash $(location mlx/backend/common/make_compiled_preamble.sh) $(location mlx/backend/common/compiled_preamble.cpp) clang . TRUE",
     tags = ["manual"],
@@ -152,8 +155,8 @@ cc_library(
             "mlx/backend/no_cpu/**/*",
             "mlx/backend/no_metal/**/*",
             "mlx/distributed/mpi/**/*",
-            "mlx/io/no_safetensors.cpp",  # TODO: Parameterize
-            "mlx/io/no_gguf.cpp",  # TODO: Parameterize
+            "mlx/io/no_safetensors.cpp",
+            "mlx/io/no_gguf.cpp",
         ],
     ),
     hdrs = glob(

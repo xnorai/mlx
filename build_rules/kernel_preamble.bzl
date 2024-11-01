@@ -12,11 +12,10 @@ def make_metal_preamble_kernel_rules(kernel_specs):
                 $$(dirname $(location mlx/backend/metal/jit/{name}.cpp)) \
                 $(CC) \
                 $$(pwd) \
-                {src_file} \
+                {name} \
                 "-DMLX_METAL_VERSION=320"
             """.format(
                 name = name,
-                src_file = name,
             ),
             tags = ["manual"],
             tools = ["mlx/backend/metal/make_compiled_preamble.sh"],
