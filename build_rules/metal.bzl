@@ -69,4 +69,3 @@ metal_library = rule(
     ),
     outputs = {"out": "%{name}.metallib"},
 )
-

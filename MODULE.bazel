@@ -2,17 +2,22 @@ module(name = "mlx")
 
 bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "nanobind", version = "2.1.0")
+
 bazel_dep(name = "rules_apple", version = "3.9.2", dev_dependency = True)
+
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "apple_support", version = "1.15.1")
 bazel_dep(name = "bazel_skylib", version = "1.6.1")
 bazel_dep(name = "nlohmann_json", version = "3.11.3.bcr.1")
+
 bazel_dep(name = "doctest", version = "2.4.11", dev_dependency = True)
 
 metal_version_capture = use_repo_rule("//build_rules:metal_version_capture.bzl", "metal_version_capture")
+
 metal_version_capture(name = "metal_version_capture")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "metal_cpp",
     build_file_content = """
@@ -45,9 +50,9 @@ cc_library(
     includes = ["."],
 )
 """,
+    sha256 = "165327d8f48835897b18c6c936cedd8106993ca32f7ac3221479087ab2d9cef4",
     strip_prefix = "gguf-tools-4e6455ecaf92b1a59e6a3291646459af3154bef5",
     urls = [
-        "https://github.com/antirez/gguf-tools/archive/4e6455ecaf92b1a59e6a3291646459af3154bef5.zip"
+        "https://github.com/antirez/gguf-tools/archive/4e6455ecaf92b1a59e6a3291646459af3154bef5.zip",
     ],
-    sha256 = "165327d8f48835897b18c6c936cedd8106993ca32f7ac3221479087ab2d9cef4"
 )
