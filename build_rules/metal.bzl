@@ -1,5 +1,6 @@
 load("@apple_support//lib:apple_support.bzl", "apple_support")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
 # While rules_apple has support for Metal compilation, it's so convoluted there
 # that it's not clear how to use it unless you're building a full blown app. So
@@ -26,7 +27,7 @@ def _metal_library_impl(ctx):
             workspace_root = "."
 
         # Note that we allow includes wrt workspace root, as specified in Style.
-        args.add_all(["metal", "-c", src.path, "-o", air_file.path, "-I", workspace_root])
+        args.add_all(["metal", "-Wall", "-Wextra", "-fno-fast-math", "-c", src.path, "-o", air_file.path, "-I", workspace_root])
 
         # Compile .metal files to .air
         apple_support.run(
@@ -67,4 +68,25 @@ metal_library = rule(
         },
     ),
     outputs = {"out": "%{name}.metallib"},
+)
+
+def _metal_version_capture_impl(repository_ctx):
+    # Execute the command to get the metal version
+    result = repository_ctx.execute(
+        ["zsh", "-c", "echo '__METAL_VERSION__' | xcrun -sdk macosx metal -E -x metal -P - | tail -1 | tr -d '\\n'"],
+    )
+
+    # Check if the command was successful
+    if result.return_code != 0:
+        fail("Failed to execute command for metal version: " + result.stderr)
+
+    # Capture the output as the metal version
+    metal_version = result.stdout.strip()
+
+    # Write as global var.
+    repository_ctx.file("BUILD")
+    repository_ctx.file("metal_version.bzl", 'MLX_METAL_VERSION = "{}"'.format(metal_version))
+
+metal_version_capture = repository_rule(
+    implementation = _metal_version_capture_impl,
 )
