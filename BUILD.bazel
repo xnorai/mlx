@@ -1,6 +1,6 @@
+load("@metal_version_capture//:metal_version.bzl", "MLX_METAL_VERSION")
 load("//build_rules:kernel_preamble.bzl", "make_metal_preamble_kernel_rules")
 load("//build_rules:metal.bzl", "metal_library")
-load("@metal_version_capture//:metal_version.bzl", "MLX_METAL_VERSION")
 
 package(default_visibility = ["//visibility:public"])
 
