@@ -1,5 +1,6 @@
 load("//build_rules:kernel_preamble.bzl", "make_metal_preamble_kernel_rules")
 load("//build_rules:metal.bzl", "metal_library")
+load("@metal_version_capture//:metal_version.bzl", "MLX_METAL_VERSION")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -11,9 +12,18 @@ genrule(
         "mlx/backend/common/**/*",
     ]),
     outs = ["mlx/backend/common/compiled_preamble.cpp"],
-    cmd = "bash $(location mlx/backend/common/make_compiled_preamble.sh) $(location mlx/backend/common/compiled_preamble.cpp) clang . TRUE",
+    cmd = "bash $(location mlx/backend/common/make_compiled_preamble.sh) $@ clang . TRUE",
     tags = ["manual"],
     tools = ["mlx/backend/common/make_compiled_preamble.sh"],
+)
+
+genrule(
+    name = "generate_metal_version",
+    srcs = [],
+    outs = ["metal_version.txt"],
+    cmd = """
+        echo $(echo '__METAL_VERSION__' | xcrun -sdk macosx metal -E -x metal -P - | tail -1 | tr -d '\n') > $@
+    """,
 )
 
 cc_library(
@@ -23,10 +33,7 @@ cc_library(
     hdrs = [
         "mlx/backend/common/compiled_preamble.h",
     ],
-    defines = [
-        # TODO: Detect __METAL_VERSION__
-        "MLX_METAL_VERSION=320",
-    ],
+    copts = ["-DMLX_METAL_VERSION={}".format(MLX_METAL_VERSION)],
 )
 
 # Generate preamble for Metal backend.
@@ -168,6 +175,7 @@ cc_library(
             "mlx/distributed/mpi/**/*",
         ],
     ),
+    copts = ["-DMLX_METAL_VERSION={}".format(MLX_METAL_VERSION)],
     data = [":kernels"],
     defines = [
         "ACCELERATE_NEW_LAPACK",
