@@ -1,4 +1,3 @@
-load("@metal_version_capture//:metal_version.bzl", "MLX_METAL_VERSION")
 load("//build_rules:kernel_preamble.bzl", "make_metal_preamble_kernel_rules")
 load("//build_rules:metal.bzl", "metal_library")
 
@@ -17,15 +16,6 @@ genrule(
     tools = ["mlx/backend/common/make_compiled_preamble.sh"],
 )
 
-genrule(
-    name = "generate_metal_version",
-    srcs = [],
-    outs = ["metal_version.txt"],
-    cmd = """
-        echo $(echo '__METAL_VERSION__' | xcrun -sdk macosx metal -E -x metal -P - | tail -1 | tr -d '\n') > $@
-    """,
-)
-
 cc_library(
     name = "preamble_common",
     srcs = [":generate_preamble_common"],
@@ -33,11 +23,11 @@ cc_library(
     hdrs = [
         "mlx/backend/common/compiled_preamble.h",
     ],
-    copts = ["-DMLX_METAL_VERSION={}".format(MLX_METAL_VERSION)],
+    defines = ["MLX_METAL_VERSION=320"],
 )
 
 # Generate preamble for Metal backend.
-make_metal_preamble_kernel_rules({
+make_metal_preamble_kernel_rules(kernel_specs = {
     "utils": {
         "src": "mlx/backend/metal/kernels/utils.h",
         "deps": [
@@ -175,9 +165,9 @@ cc_library(
             "mlx/distributed/mpi/**/*",
         ],
     ),
-    copts = ["-DMLX_METAL_VERSION={}".format(MLX_METAL_VERSION)],
     data = [":kernels"],
     defines = [
+        "MLX_METAL_VERSION=320",
         "ACCELERATE_NEW_LAPACK",
         "STRINGIFY_(x)=#x",
         "STRINGIFY(x)=STRINGIFY_(x)",

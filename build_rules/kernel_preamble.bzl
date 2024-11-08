@@ -1,5 +1,3 @@
-load("@metal_version_capture//:metal_version.bzl", "MLX_METAL_VERSION")
-
 def make_metal_preamble_kernel_rules(kernel_specs):
     generated_targets = []
     for name, spec in kernel_specs.items():
@@ -15,10 +13,9 @@ def make_metal_preamble_kernel_rules(kernel_specs):
                 $(CC) \
             $$(pwd) \
                 {name} \
-                "-DMLX_METAL_VERSION={metal_version}"
+                "-DMLX_METAL_VERSION=320"
             """.format(
-                name = name,
-                metal_version = MLX_METAL_VERSION,
+                name = name
             ),
             tags = ["manual"],
             tools = ["mlx/backend/metal/make_compiled_preamble.sh"],
