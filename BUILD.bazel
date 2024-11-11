@@ -74,7 +74,12 @@ make_metal_preamble_kernel_rules(kernel_specs = {
     },
     # TODO: Parameterize like CMake
     "arange": {"src": "mlx/backend/metal/kernels/arange.h"},
-    "copy": {"src": "mlx/backend/metal/kernels/copy.h"},
+    "copy": {
+        "src": "mlx/backend/metal/kernels/copy.h",
+        "deps": [
+            "mlx/backend/metal/kernels/utils.h",
+        ],
+    },
     "unary": {"src": "mlx/backend/metal/kernels/unary.h"},
     "binary": {"src": "mlx/backend/metal/kernels/binary.h"},
     "binary_two": {"src": "mlx/backend/metal/kernels/binary_two.h"},
@@ -154,6 +159,7 @@ cc_library(
             "mlx/distributed/mpi/**/*",
             "mlx/io/no_safetensors.cpp",
             "mlx/io/no_gguf.cpp",
+            "mlx/backend/metal/nojit_kernels.cpp",
         ],
     ),
     hdrs = glob(
@@ -165,13 +171,13 @@ cc_library(
             "mlx/distributed/mpi/**/*",
         ],
     ),
-    data = [":kernels"],
+    data = [":kernels.metallib"],
     defines = [
         "MLX_METAL_VERSION=320",
         "ACCELERATE_NEW_LAPACK",
         "STRINGIFY_(x)=#x",
         "STRINGIFY(x)=STRINGIFY_(x)",
-        "METAL_PATH=STRINGIFY(kernels.metallib)",  # TODO: Change library name to mlx.metallib
+        "METAL_PATH=STRINGIFY($(rootpath //:kernels.metallib))",
     ],
     linkopts = [
         "-framework",
@@ -192,7 +198,6 @@ cc_library(
 cc_test(
     name = "tests",
     srcs = glob(["tests/*.cpp"]),
-    data = [":kernels"],
     deps = [
         ":mlx",
         "@doctest//doctest",
@@ -206,3 +211,4 @@ metal_library(
     srcs = glob(["mlx/backend/metal/kernels/**/*.metal"]),
     hdrs = glob(["mlx/backend/metal/kernels/**/*.h"]),
 )
+
