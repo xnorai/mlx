@@ -74,12 +74,7 @@ make_metal_preamble_kernel_rules(kernel_specs = {
     },
     # TODO: Parameterize like CMake
     "arange": {"src": "mlx/backend/metal/kernels/arange.h"},
-    "copy": {
-        "src": "mlx/backend/metal/kernels/copy.h",
-        "deps": [
-            "mlx/backend/metal/kernels/utils.h",
-        ],
-    },
+    "copy": {"src": "mlx/backend/metal/kernels/copy.h"},
     "unary": {"src": "mlx/backend/metal/kernels/unary.h"},
     "binary": {"src": "mlx/backend/metal/kernels/binary.h"},
     "binary_two": {"src": "mlx/backend/metal/kernels/binary_two.h"},
