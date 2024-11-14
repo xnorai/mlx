@@ -10,15 +10,18 @@ def make_metal_preamble_kernel_rules(kernel_specs):
                 bash \
                 $(location mlx/backend/metal/make_compiled_preamble.sh) \
                 $$(dirname $(location mlx/backend/metal/jit/{name}.cpp)) \
-                $(CC) \
-            $$(pwd) \
+                clang \
+                $$(dirname $(location BUILD.bazel)) \
                 {name} \
                 "-DMLX_METAL_VERSION=320"
             """.format(
                 name = name
             ),
             tags = ["manual"],
-            tools = ["mlx/backend/metal/make_compiled_preamble.sh"],
+            tools = [
+                "BUILD.bazel",
+                "mlx/backend/metal/make_compiled_preamble.sh"
+            ],
             toolchains = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
         )
         generated_targets.append(":" + name)
