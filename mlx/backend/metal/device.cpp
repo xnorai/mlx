@@ -3,6 +3,9 @@
 #include <cstdlib>
 #include <sstream>
 
+#include <filesystem>
+#include <iostream>
+
 #include <sys/sysctl.h>
 
 #define NS_PRIVATE_IMPLEMENTATION
@@ -45,7 +48,20 @@ auto load_device() {
 std::pair<MTL::Library*, NS::Error*> load_library_from_path(
     MTL::Device* device,
     const char* path) {
-  auto library = NS::String::string(path, NS::UTF8StringEncoding);
+
+  std::filesystem::path cwd = std::filesystem::current_path();
+  // std::cout << "CWD" << cwd << std::endl;
+  // std::cout << "PATH: " << path << std::endl;
+
+  std::filesystem::path fs_path = path;
+  if (std::filesystem::exists(fs_path)) {
+    if (std::filesystem::is_symlink(fs_path)) {
+      fs_path = std::filesystem::read_symlink(fs_path);
+    }
+    fs_path = std::filesystem::absolute(fs_path);
+  }
+
+  auto library = NS::String::string(fs_path.c_str(), NS::UTF8StringEncoding);
   NS::Error* error;
   auto lib = device->newLibrary(library, &error);
 
@@ -80,6 +96,7 @@ MTL::Library* load_library(
   if (first_path.size() != 0) {
     auto [lib, error] = load_library_from_path(device, first_path.c_str());
     if (lib) {
+      std::cout << "99: Managed to load the metallib lib" << std::endl;
       return lib;
     }
   }
@@ -110,10 +127,12 @@ MTL::Library* load_library(
     if (!lib) {
       std::ostringstream msg;
       msg << error->localizedDescription()->utf8String() << "\n"
+          << error->localizedFailureReason()->utf8String() << "\n"
           << "Failed to load device library from <" << lib_path << ">"
           << " or <" << first_path << ">.";
       throw std::runtime_error(msg.str());
     }
+    std::cout << "134: Managed to load the metallib lib" << std::endl;
     return lib;
   }
 }
