@@ -176,13 +176,13 @@ cc_library(
         ],
     ) + select({
         "@platforms//os:macos": [
-            "mlx/backend/common/compiled_cpu.cpp"
+            "mlx/backend/common/compiled_cpu.cpp",
         ],
         ":ios_arm64": [
-           "mlx/backend/common/compiled_nocpu.cpp"
+            "mlx/backend/common/compiled_nocpu.cpp",
         ],
         ":ios_sim_arm64": [
-           "mlx/backend/common/compiled_nocpu.cpp"
+            "mlx/backend/common/compiled_nocpu.cpp",
         ],
         "//conditions:default": ["mlx/backend/common/compiled_cpu.cpp"],
     }),
@@ -201,10 +201,10 @@ cc_library(
         "ACCELERATE_NEW_LAPACK",
         "STRINGIFY_(x)=#x",
         "STRINGIFY(x)=STRINGIFY_(x)",
-        # TODO(Frank): introduce select based on whether it's iOS or macOS to use $location
-        # or $rootpath.
-        "METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))",
-    ],
+    ] + select({
+        "@platforms//os:macos": ["METAL_PATH=STRINGIFY($(rootpath //:mlx_metallib_file))"],
+        "//conditions:default": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+    }),
     linkopts = [
         "-framework",
         "Metal",
