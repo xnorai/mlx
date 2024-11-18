@@ -202,8 +202,9 @@ cc_library(
         "STRINGIFY_(x)=#x",
         "STRINGIFY(x)=STRINGIFY_(x)",
     ] + select({
-        "@platforms//os:macos": ["METAL_PATH=STRINGIFY($(rootpath //:mlx_metallib_file))"],
-        "//conditions:default": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+        ":ios_arm64": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+        ":ios_sim_arm64": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+        "//conditions:default": ["METAL_PATH=STRINGIFY($(rootpath //:mlx_metallib_file))"],
     }),
     linkopts = [
         "-framework",
