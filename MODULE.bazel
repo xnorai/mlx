@@ -48,10 +48,5 @@ cc_library(
     urls = [
         "https://github.com/antirez/gguf-tools/archive/4e6455ecaf92b1a59e6a3291646459af3154bef5.zip",
     ],
-    patch_args = ["-p1"],
-    patches = [
-        # Not a full fix - makes all GGUF files read-only. Needed for iOS.
-        ":0001-Open-files-in-readonly-mode.patch"
-    ]
 )
 
