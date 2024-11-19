@@ -120,10 +120,12 @@ make_metal_preamble_kernel_rules(kernel_specs = {
         "deps": [
             "mlx/backend/metal/kernels/steel/defines.h",
             "mlx/backend/metal/kernels/steel/utils.h",
+            "mlx/backend/metal/kernels/steel/utils/type_traits.h",
+            "mlx/backend/metal/kernels/steel/utils/integral_constant.h",
             "mlx/backend/metal/kernels/steel/gemm/loader.h",
-            "mlx/backend/metal/kernels/steel/gemm/mma.h",
             "mlx/backend/metal/kernels/steel/gemm/params.h",
             "mlx/backend/metal/kernels/steel/gemm/transforms.h",
+            "mlx/backend/metal/kernels/steel/gemm/mma.h",
         ],
     },
     "steel/gemm/kernels/steel_gemm_fused": {"src": "mlx/backend/metal/kernels/steel/gemm/kernels/steel_gemm_fused.h"},
@@ -138,6 +140,8 @@ make_metal_preamble_kernel_rules(kernel_specs = {
         "src": "mlx/backend/metal/kernels/steel/conv/conv.h",
         "deps": [
             "mlx/backend/metal/kernels/steel/utils.h",
+            "mlx/backend/metal/kernels/steel/utils/type_traits.h",
+            "mlx/backend/metal/kernels/steel/utils/integral_constant.h",
             "mlx/backend/metal/kernels/steel/defines.h",
             "mlx/backend/metal/kernels/steel/gemm/mma.h",
             "mlx/backend/metal/kernels/steel/gemm/transforms.h",
