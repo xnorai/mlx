@@ -3,6 +3,22 @@ load("//build_rules:metal.bzl", "metal_library")
 
 package(default_visibility = ["//visibility:public"])
 
+config_setting(
+    name = "ios_arm64",
+    values = {
+        "apple_platform_type": "ios",
+        "cpu": "ios_arm64",
+    },
+)
+
+config_setting(
+    name = "ios_sim_arm64",
+    values = {
+        "apple_platform_type": "ios",
+        "cpu": "ios_sim_arm64",
+    },
+)
+
 # Generate preamble for common backend.
 genrule(
     name = "generate_preamble_common",
@@ -155,8 +171,21 @@ cc_library(
             "mlx/io/no_safetensors.cpp",
             "mlx/io/no_gguf.cpp",
             "mlx/backend/metal/nojit_kernels.cpp",
+            "mlx/backend/common/compiled_cpu.cpp",
+            "mlx/backend/common/compiled_nocpu.cpp",
         ],
-    ),
+    ) + select({
+        "@platforms//os:macos": [
+            "mlx/backend/common/compiled_cpu.cpp",
+        ],
+        ":ios_arm64": [
+            "mlx/backend/common/compiled_nocpu.cpp",
+        ],
+        ":ios_sim_arm64": [
+            "mlx/backend/common/compiled_nocpu.cpp",
+        ],
+        "//conditions:default": ["mlx/backend/common/compiled_cpu.cpp"],
+    }),
     hdrs = glob(
         ["mlx/**/*.h"],
         exclude = [
@@ -166,14 +195,17 @@ cc_library(
             "mlx/distributed/mpi/**/*",
         ],
     ),
-    data = [":kernels.metallib"],
+    data = [":mlx_metallib_file"],
     defines = [
         "MLX_METAL_VERSION=320",
         "ACCELERATE_NEW_LAPACK",
         "STRINGIFY_(x)=#x",
         "STRINGIFY(x)=STRINGIFY_(x)",
-        "METAL_PATH=STRINGIFY($(rootpath //:kernels.metallib))",
-    ],
+    ] + select({
+        ":ios_arm64": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+        ":ios_sim_arm64": ["METAL_PATH=STRINGIFY($(location //:mlx_metallib_file))"],
+        "//conditions:default": ["METAL_PATH=STRINGIFY($(rootpath //:mlx_metallib_file))"],
+    }),
     linkopts = [
         "-framework",
         "Metal",
@@ -200,10 +232,21 @@ cc_test(
     ],
 )
 
-# TODO: Change library name to mlx.metallib
 metal_library(
     name = "kernels",
     srcs = glob(["mlx/backend/metal/kernels/**/*.metal"]),
     hdrs = glob(["mlx/backend/metal/kernels/**/*.h"]),
 )
 
+# To finalize the metallib to be named as mlx.metallib
+genrule(
+    name = "mlx_metallib_genrule",
+    srcs = [":kernels.metallib"],
+    outs = ["mlx.metallib"],
+    cmd = "cp $(location :kernels.metallib) $@",
+)
+
+filegroup(
+    name = "mlx_metallib_file",
+    srcs = [":mlx_metallib_genrule"],
+)
