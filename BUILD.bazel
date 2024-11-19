@@ -179,9 +179,6 @@ cc_library(
             "mlx/backend/common/compiled_nocpu.cpp",
         ],
     ) + select({
-        "@platforms//os:macos": [
-            "mlx/backend/common/compiled_cpu.cpp",
-        ],
         ":ios_arm64": [
             "mlx/backend/common/compiled_nocpu.cpp",
         ],
